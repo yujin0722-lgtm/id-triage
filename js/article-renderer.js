@@ -1,5 +1,5 @@
-import { classifyArticle, getGroupLabel, groupArticles } from "./article-classifier.js";
-import { loadDecision, saveDecision } from "./storage.js";
+import { classifyArticle, getGroupLabel, groupArticles } from "./article-classifier.js?v=2.0.0";
+import { loadDecision, saveDecision } from "./storage.js?v=2.0.0";
 
 const STATUS_LABELS = {
   unreviewed: "未判定",
@@ -37,6 +37,22 @@ function statusText(decision) {
   return reasonLabel && decision.reason ? `除外：${reasonLabel}` : "除外";
 }
 
+function formatAuthors(authors = []) {
+  if (!authors.length) return "著者情報なし";
+  if (authors.length <= 6) return authors.join(", ");
+  return `${authors.slice(0, 6).join(", ")}, et al.`;
+}
+
+function formatCitation(article) {
+  const volumeIssue = article.volume
+    ? `${article.volume}${article.issue ? `(${article.issue})` : ""}`
+    : "";
+  const pagePart = article.pages ? `${volumeIssue ? ":" : ""}${article.pages}` : "";
+  const bibliographicPart = `${volumeIssue}${pagePart}`;
+
+  return [article.journal, article.year, bibliographicPart].filter(Boolean).join(". ");
+}
+
 function buildScreeningButton(label, status, currentStatus, onClick) {
   const button = createElement("button", {
     className: `button button-small ${status === currentStatus ? "button-primary" : "button-secondary"}`,
@@ -60,12 +76,21 @@ function createArticleCard(article) {
   header.append(statusLabel);
   card.append(header);
 
-  const title = createElement("h3", { className: "article-title", text: article.title || "書誌情報を十分に取得できませんでした" });
+  const title = createElement("h3", { className: "article-title" });
+  const titleLink = createElement("a", {
+    text: article.title || "書誌情報を十分に取得できませんでした",
+    attributes: {
+      href: article.pubmedUrl,
+      target: "_blank",
+      rel: "noopener noreferrer"
+    }
+  });
+  title.append(titleLink);
   card.append(title);
 
-  card.append(createElement("p", { className: "article-meta", text: article.authors?.length ? article.authors.join(", ") : "著者情報なし" }));
-  const journalLine = [article.journal, article.year].filter(Boolean).join(", ");
-  if (journalLine) card.append(createElement("p", { className: "article-meta", text: journalLine }));
+  card.append(createElement("p", { className: "article-meta", text: formatAuthors(article.authors) }));
+  const citation = formatCitation(article);
+  if (citation) card.append(createElement("p", { className: "article-meta", text: citation }));
 
   const identifiers = createElement("div", { className: "article-identifiers" });
   identifiers.append(createElement("span", { text: `PMID: ${article.pmid}` }));
@@ -73,12 +98,16 @@ function createArticleCard(article) {
   card.append(identifiers);
 
   const articleActions = createElement("div", { className: "article-actions" });
-  const pubmedButton = createElement("button", {
-    className: "button button-secondary button-small demo-disabled",
-    text: "PubMedで開く（仮データ）",
-    attributes: { type: "button", disabled: "" }
+  const pubmedLink = createElement("a", {
+    className: "button button-secondary button-small",
+    text: "PubMedで開く",
+    attributes: {
+      href: article.pubmedUrl,
+      target: "_blank",
+      rel: "noopener noreferrer"
+    }
   });
-  articleActions.append(pubmedButton);
+  articleActions.append(pubmedLink);
   card.append(articleActions);
 
   const screeningPanel = createElement("div", { className: "screening-panel" });
@@ -135,6 +164,17 @@ function createArticleCard(article) {
   return card;
 }
 
+export function renderEmptyResults(container) {
+  container.replaceChildren(
+    createElement("div", { className: "empty-results" })
+  );
+  const emptyPanel = container.firstElementChild;
+  emptyPanel.append(
+    createElement("p", { className: "empty-results-title", text: "条件に一致する論文が見つかりませんでした。" }),
+    createElement("p", { text: "検索語を減らすか、研究デザインや発表年の条件を広げてください。" })
+  );
+}
+
 export function renderArticles(container, articles) {
   container.replaceChildren();
   groupArticles(articles).forEach(group => {
@@ -147,7 +187,7 @@ export function renderArticles(container, articles) {
     const list = createElement("div", { className: "article-list" });
 
     if (group.articles.length === 0) {
-      list.append(createElement("p", { className: "help-text", text: "該当する仮論文はありません。" }));
+      list.append(createElement("p", { className: "help-text", text: "該当する論文はありません。" }));
     } else {
       group.articles.forEach(article => list.append(createArticleCard(article)));
     }

@@ -1,4 +1,4 @@
-import { subjectTerms, clinicalThemes, studyDesignFilters } from "./search-terms.js";
+import { subjectTerms, clinicalThemes, studyDesignFilters } from "./search-terms.js?v=2.0.0";
 
 export function normalizeSubject(value) {
   return String(value ?? "")

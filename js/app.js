@@ -1,6 +1,7 @@
-import { buildPubMedQuery, validateSearchForm } from "./query-builder.js";
-import { clearLastSearch, loadLastSearch, saveLastSearch } from "./storage.js";
-import { renderArticles } from "./article-renderer.js";
+import { buildPubMedQuery, validateSearchForm } from "./query-builder.js?v=2.0.0";
+import { clearLastSearch, loadLastSearch, saveLastSearch } from "./storage.js?v=2.0.0";
+import { renderArticles, renderEmptyResults } from "./article-renderer.js?v=2.0.0";
+import { PubMedApiError, searchPubMed } from "./pubmed-api.js?v=2.0.0";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -19,7 +20,7 @@ const elements = {
   conversionSummary: document.querySelector("#conversion-summary"),
   queryTextarea: document.querySelector("#query-textarea"),
   manualEditBadge: document.querySelector("#manual-edit-badge"),
-  mockSearchButton: document.querySelector("#mock-search-button"),
+  searchButton: document.querySelector("#pubmed-search-button"),
   copyQueryButton: document.querySelector("#copy-query-button"),
   backToInputButton: document.querySelector("#back-to-input-button"),
   clearButton: document.querySelector("#clear-button"),
@@ -32,67 +33,7 @@ const elements = {
 let generatedQuery = "";
 let currentConversion = null;
 let isManuallyEdited = false;
-
-const mockArticles = [
-  {
-    pmid: "DEMO-001",
-    title: "Shorter versus longer antimicrobial treatment for bloodstream infection: a systematic review",
-    authors: ["Sample A", "Sample B"],
-    journal: "Demo Journal of Infectious Diseases",
-    year: "2026",
-    doi: "10.0000/demo.001",
-    publicationTypes: ["Systematic Review"]
-  },
-  {
-    pmid: "DEMO-002",
-    title: "Clinical practice guidance for management of complicated bacteremia",
-    authors: ["Example C", "Example D"],
-    journal: "Clinical Demo Guidance",
-    year: "2025",
-    publicationTypes: ["Practice Guideline"]
-  },
-  {
-    pmid: "DEMO-003",
-    title: "Seven versus fourteen days of therapy in stable patients: a randomized trial",
-    authors: ["Trial E", "Trial F"],
-    journal: "International Demo Medicine",
-    year: "2024",
-    doi: "10.0000/demo.003",
-    publicationTypes: ["Randomized Controlled Trial"]
-  },
-  {
-    pmid: "DEMO-004",
-    title: "Treatment duration and recurrence in a multicenter cohort",
-    authors: ["Cohort G", "Cohort H"],
-    journal: "Observational Research Demo",
-    year: "2023",
-    publicationTypes: ["Observational Study", "Cohort Study"]
-  },
-  {
-    pmid: "DEMO-005",
-    title: "Early oral step-down therapy: a case-control analysis",
-    authors: ["Study I"],
-    journal: "Demo Antimicrobial Practice",
-    year: "2022",
-    publicationTypes: ["Case-Control Studies"]
-  },
-  {
-    pmid: "DEMO-006",
-    title: "Unexpected relapse after abbreviated therapy: a case report",
-    authors: [],
-    journal: "Demo Case Reports",
-    year: "2021",
-    publicationTypes: ["Case Reports"]
-  },
-  {
-    pmid: "DEMO-007",
-    title: "Laboratory characteristics associated with persistent bacteremia",
-    authors: ["Researcher J", "Researcher K"],
-    journal: "Microbiology Demo",
-    year: "2020",
-    publicationTypes: ["Journal Article"]
-  }
-];
+let isSearching = false;
 
 function getFormValues() {
   return {
@@ -236,6 +177,81 @@ function restoreState() {
   showMessage("前回の検索条件と検索式を復元しました。");
 }
 
+function setSearchingState(searching) {
+  isSearching = searching;
+  elements.searchButton.disabled = searching;
+  elements.searchButton.textContent = searching ? "PubMedを検索しています……" : "PubMedを検索";
+  elements.querySection.setAttribute("aria-busy", String(searching));
+}
+
+function errorMessageFor(error) {
+  if (!(error instanceof PubMedApiError)) {
+    return "PubMedとの通信に失敗しました。インターネット接続を確認して、もう一度検索してください。";
+  }
+
+  switch (error.code) {
+    case "rate-limit":
+      return "短時間に検索が繰り返されました。少し時間を空けて、もう一度検索してください。";
+    case "timeout":
+      return "PubMedからの応答が時間内に得られませんでした。少し時間を空けて、もう一度検索してください。";
+    case "invalid-response":
+    case "api":
+      return "PubMedから取得した情報を読み取れませんでした。時間を空けて再度お試しください。";
+    case "invalid-query":
+      return "検索式が空です。検索式を作成してから検索してください。";
+    case "network":
+    case "http":
+    default:
+      return "PubMedとの通信に失敗しました。インターネット接続を確認して、もう一度検索してください。";
+  }
+}
+
+function sortLabel(value) {
+  return value === "pub_date" ? "新しい順" : "関連度順";
+}
+
+async function executePubMedSearch() {
+  if (isSearching) return;
+
+  const query = elements.queryTextarea.value.trim();
+  if (!query) {
+    showMessage("検索式を作成してください。", "error");
+    return;
+  }
+
+  clearMessage();
+  saveCurrentState();
+  setSearchingState(true);
+  elements.resultsSection.hidden = false;
+  elements.resultSummary.textContent = "PubMedを検索しています……";
+  elements.articleGroups.replaceChildren();
+  elements.resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  try {
+    const formValues = getFormValues();
+    const result = await searchPubMed({
+      query,
+      resultLimit: formValues.resultLimit,
+      sortOrder: formValues.sortOrder
+    });
+
+    elements.resultSummary.textContent = `該当件数：${result.total.toLocaleString("ja-JP")}件 ／ 今回の表示：${result.articles.length}件 ／ 並び順：${sortLabel(formValues.sortOrder)}`;
+
+    if (result.articles.length === 0) {
+      renderEmptyResults(elements.articleGroups);
+    } else {
+      renderArticles(elements.articleGroups, result.articles);
+    }
+  } catch (error) {
+    console.error("PubMed search failed:", error);
+    elements.resultsSection.hidden = true;
+    elements.articleGroups.replaceChildren();
+    showMessage(errorMessageFor(error), "error");
+  } finally {
+    setSearchingState(false);
+  }
+}
+
 elements.form.addEventListener("submit", event => {
   event.preventDefault();
   generateQuery();
@@ -261,19 +277,7 @@ elements.backToInputButton.addEventListener("click", () => {
   elements.subjectInput.focus({ preventScroll: true });
 });
 
-elements.mockSearchButton.addEventListener("click", () => {
-  if (!elements.queryTextarea.value.trim()) {
-    showMessage("検索式を作成してください。", "error");
-    return;
-  }
-  saveCurrentState();
-  const requestedLimit = Number(elements.resultLimit.value);
-  const displayed = mockArticles.slice(0, Math.min(requestedLimit, mockArticles.length));
-  elements.resultSummary.textContent = `Phase 1 仮データ：該当件数 326件 ／ 今回の表示 ${displayed.length}件 ／ ${elements.sortOrder.value === "pub_date" ? "新しい順" : "関連度順"}`;
-  renderArticles(elements.articleGroups, displayed);
-  elements.resultsSection.hidden = false;
-  elements.resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
-});
+elements.searchButton.addEventListener("click", executePubMedSearch);
 
 elements.clearButton.addEventListener("click", () => {
   elements.form.reset();
@@ -286,6 +290,7 @@ elements.clearButton.addEventListener("click", () => {
   elements.queryTextarea.value = "";
   elements.querySection.hidden = true;
   elements.resultsSection.hidden = true;
+  elements.articleGroups.replaceChildren();
   elements.manualEditBadge.hidden = true;
   showErrors({});
   clearLastSearch();

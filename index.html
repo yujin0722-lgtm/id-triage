@@ -6,7 +6,7 @@
   <meta name="description" content="感染症領域のPubMed検索式作成と論文選別を支援するウェブアプリ">
   <title>感染症論文トリアージ</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=2.0.0">
 </head>
 <body>
   <a class="skip-link" href="#main-content">本文へ移動</a>
@@ -18,7 +18,7 @@
         <h1>感染症論文トリアージ</h1>
         <p class="header-description">疾患名と臨床テーマからPubMed検索式を作り、論文の選別を支援します。</p>
       </div>
-      <span class="version-badge">Phase 1</span>
+      <span class="version-badge">Phase 2</span>
     </div>
   </header>
 
@@ -143,11 +143,11 @@
       </div>
 
       <div class="button-row">
-        <button type="button" id="mock-search-button" class="button button-primary">PubMedを検索</button>
+        <button type="button" id="pubmed-search-button" class="button button-primary">PubMedを検索</button>
         <button type="button" id="copy-query-button" class="button button-secondary">検索式をコピー</button>
         <button type="button" id="back-to-input-button" class="button button-text">入力内容に戻る</button>
       </div>
-      <p class="phase-note">現在はPhase 1です。「PubMedを検索」を押すと、API通信の代わりに画面確認用の仮データを表示します。</p>
+      <p class="phase-note">検索を実行すると、NCBI E-utilitiesからPubMedの書誌情報を取得します。抄録と本文は初期版では取得しません。</p>
     </section>
 
     <section id="results-section" class="panel" aria-labelledby="results-heading" hidden>
@@ -166,7 +166,7 @@
   <footer class="site-footer">
     <div class="page-width footer-inner">
       <h2>情報源・免責事項</h2>
-      <p>本アプリはPubMedの検索を補助する非公式ツールです。検索結果および書誌情報は、将来のPhaseでNCBI E-utilitiesを通じて取得します。</p>
+      <p>本アプリはPubMedの検索を補助する非公式ツールです。検索結果および書誌情報は、NCBI E-utilitiesを通じて取得します。</p>
       <p>研究デザインの分類は便宜的なものであり、論文の質、エビデンスの確実性、推奨の強さを評価するものではありません。</p>
       <p>本アプリは診断、治療その他の臨床判断を提供するものではありません。重要な判断では、必ず原論文および公式情報を確認してください。</p>
       <p>検索条件と論文の判定は、このブラウザのlocalStorageに保存されます。ブラウザのデータを削除すると保存内容も消えます。</p>
@@ -174,6 +174,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/app.js?v=2.0.0"></script>
 </body>
 </html>
