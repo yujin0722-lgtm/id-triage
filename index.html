@@ -6,7 +6,7 @@
   <meta name="description" content="感染症領域のPubMed検索式作成と論文選別を支援するウェブアプリ">
   <title>感染症論文トリアージ</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/style.css?v=4.0.0">
+  <link rel="stylesheet" href="css/style.css?v=0.1.0">
 </head>
 <body>
   <a class="skip-link" href="#main-content">本文へ移動</a>
@@ -18,7 +18,10 @@
         <h1>感染症論文トリアージ</h1>
         <p class="header-description">疾患名と臨床テーマからPubMed検索式を作り、論文の選別を支援します。</p>
       </div>
-      <span class="version-badge">Phase 4</span>
+      <div class="version-stack" aria-label="アプリのバージョン">
+        <span class="release-badge">公開版</span>
+        <span class="version-badge">Version 0.1.0</span>
+      </div>
     </div>
   </header>
 
@@ -27,7 +30,22 @@
 
     <section class="notice-panel" aria-labelledby="privacy-heading">
       <h2 id="privacy-heading">入力時の注意</h2>
-      <p>患者氏名、患者ID、生年月日、診療録、個人を識別できる情報、未公表の症例情報は入力しないでください。</p>
+      <p>患者氏名、患者ID、生年月日、診療録、個人を識別できる情報、未公表の症例情報は入力しないでください。入力した検索式はPubMed検索のためNCBIへ送信されます。</p>
+    </section>
+
+    <section class="quick-guide panel compact-panel" aria-labelledby="guide-heading">
+      <div class="section-heading compact-heading">
+        <div>
+          <p class="step-label">はじめに</p>
+          <h2 id="guide-heading">使い方は3ステップです</h2>
+        </div>
+      </div>
+      <ol class="quick-guide-list">
+        <li><strong>検索条件を入力</strong><span>英語の疾患名などを入力し、必要なテーマと研究デザインを選びます。</span></li>
+        <li><strong>検索式を確認</strong><span>アプリが追加した表現を確認し、必要なら検索式を手動修正します。</span></li>
+        <li><strong>論文を選別</strong><span>PubMed検索結果を「読む・保留・除外」に分類してブラウザへ保存します。</span></li>
+      </ol>
+      <p class="help-text guide-note">検索式と論文判定はこの端末のブラウザだけに保存されます。アカウント登録やクラウド同期はありません。</p>
     </section>
 
     <section id="search-input-section" class="panel" aria-labelledby="search-heading">
@@ -147,7 +165,7 @@
         <button type="button" id="copy-query-button" class="button button-secondary">検索式をコピー</button>
         <button type="button" id="back-to-input-button" class="button button-text">入力内容に戻る</button>
       </div>
-      <p class="phase-note">検索を実行すると、NCBI E-utilitiesからPubMedの書誌情報を取得します。抄録と本文は初期版では取得しません。</p>
+      <p class="phase-note">検索を実行すると、NCBI E-utilitiesからPubMedの書誌情報を取得します。抄録と本文は取得しません。</p>
     </section>
 
     <section id="results-section" class="panel" aria-labelledby="results-heading" hidden>
@@ -196,19 +214,40 @@
 
       <div id="article-groups"></div>
     </section>
+
+    <section id="data-management-section" class="panel" aria-labelledby="data-management-heading">
+      <div class="section-heading">
+        <div>
+          <p class="step-label">保存データ</p>
+          <h2 id="data-management-heading">このブラウザに保存されたデータを管理</h2>
+        </div>
+      </div>
+      <p>検索条件・検索式と、PMIDごとの論文判定はブラウザの<code>localStorage</code>に保存されます。他の端末やブラウザとは同期されません。</p>
+      <div id="storage-summary" class="storage-summary" role="status" aria-live="polite"></div>
+      <div class="button-row data-management-actions">
+        <button type="button" id="clear-decisions-button" class="button button-secondary">論文判定をすべて削除</button>
+        <button type="button" id="clear-all-data-button" class="button button-danger">すべての保存データを削除</button>
+      </div>
+      <p class="help-text">削除したデータは元に戻せません。「検索条件をクリア」は現在の検索条件だけを削除し、論文判定は残します。</p>
+    </section>
   </main>
 
   <footer class="site-footer">
     <div class="page-width footer-inner">
       <h2>情報源・免責事項</h2>
-      <p>本アプリはPubMedの検索を補助する非公式ツールです。検索結果および書誌情報は、NCBI E-utilitiesを通じて取得します。</p>
+      <p>本アプリはPubMedの検索を補助する非公式ツールです。米国国立医学図書館（NLM）およびNCBIが提供・承認する公式サービスではありません。検索結果および書誌情報はNCBI E-utilitiesを通じて取得します。</p>
       <p>研究デザインの分類は便宜的なものであり、論文の質、エビデンスの確実性、推奨の強さを評価するものではありません。</p>
       <p>本アプリは診断、治療その他の臨床判断を提供するものではありません。重要な判断では、必ず原論文および公式情報を確認してください。</p>
-      <p>検索条件と論文の判定は、このブラウザのlocalStorageに保存されます。ブラウザのデータを削除すると保存内容も消えます。</p>
-      <p><a href="https://www.ncbi.nlm.nih.gov/home/about/policies/" target="_blank" rel="noopener noreferrer">NCBIのポリシーを確認する</a></p>
+      <p>検索条件と論文判定は、このブラウザの<code>localStorage</code>に保存されます。アクセス解析は使用せず、ユーザー登録やクラウドへの保存も行いません。ブラウザのサイトデータを削除すると保存内容も消えます。</p>
+      <nav class="footer-links" aria-label="NCBI公式情報">
+        <a href="https://www.ncbi.nlm.nih.gov/home/about/policies/" target="_blank" rel="noopener noreferrer">NCBIの利用方針・著作権情報</a>
+        <a href="https://pubmed.ncbi.nlm.nih.gov/disclaimer/" target="_blank" rel="noopener noreferrer">PubMed Disclaimer</a>
+        <a href="https://pubmed.ncbi.nlm.nih.gov/help/" target="_blank" rel="noopener noreferrer">PubMed Help</a>
+      </nav>
+      <p class="footer-version">ID Paper Triage Version 0.1.0</p>
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=4.0.0"></script>
+  <script type="module" src="js/app.js?v=0.1.0"></script>
 </body>
 </html>

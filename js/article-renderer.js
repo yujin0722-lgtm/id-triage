@@ -1,8 +1,8 @@
 import {
   classifyArticleDetailed,
   groupArticles
-} from "./article-classifier.js?v=4.0.0";
-import { loadDecision, saveDecision } from "./storage.js?v=4.0.0";
+} from "./article-classifier.js?v=0.1.0";
+import { loadDecision, saveDecision } from "./storage.js?v=0.1.0";
 
 const STATUS_LABELS = {
   unreviewed: "未判定",

@@ -20,6 +20,16 @@ function safelySet(key, value) {
   }
 }
 
+function safelyRemove(key) {
+  try {
+    localStorage.removeItem(key);
+    return true;
+  } catch (error) {
+    console.warn("保存データを削除できませんでした。", error);
+    return false;
+  }
+}
+
 export function saveLastSearch(data) {
   return safelySet(LAST_SEARCH_KEY, { ...data, updatedAt: new Date().toISOString() });
 }
@@ -34,18 +44,13 @@ export function loadLastSearch() {
 }
 
 export function clearLastSearch() {
-  try {
-    localStorage.removeItem(LAST_SEARCH_KEY);
-    return true;
-  } catch (error) {
-    console.warn("保存された検索条件を削除できませんでした。", error);
-    return false;
-  }
+  return safelyRemove(LAST_SEARCH_KEY);
 }
 
 export function loadDecisions() {
   try {
-    return safelyParse(localStorage.getItem(DECISIONS_KEY), {});
+    const decisions = safelyParse(localStorage.getItem(DECISIONS_KEY), {});
+    return decisions && typeof decisions === "object" && !Array.isArray(decisions) ? decisions : {};
   } catch (error) {
     console.warn("保存された論文判定へアクセスできませんでした。", error);
     return {};
@@ -54,12 +59,24 @@ export function loadDecisions() {
 
 export function saveDecision(pmid, decision) {
   const decisions = loadDecisions();
-  decisions[pmid] = {
+  const normalizedDecision = {
     status: decision.status ?? "unreviewed",
     reason: decision.reason ?? "",
     note: decision.note ?? "",
     updatedAt: new Date().toISOString()
   };
+
+  // 初期状態へ戻した論文は保存対象から外し、保存件数を実際の判定数と一致させる。
+  if (
+    normalizedDecision.status === "unreviewed" &&
+    !normalizedDecision.reason &&
+    !normalizedDecision.note
+  ) {
+    delete decisions[pmid];
+  } else {
+    decisions[pmid] = normalizedDecision;
+  }
+
   return safelySet(DECISIONS_KEY, decisions);
 }
 
@@ -68,5 +85,25 @@ export function loadDecision(pmid) {
     status: "unreviewed",
     reason: "",
     note: ""
+  };
+}
+
+export function clearAllDecisions() {
+  return safelyRemove(DECISIONS_KEY);
+}
+
+export function clearAllStoredData() {
+  const searchCleared = clearLastSearch();
+  const decisionsCleared = clearAllDecisions();
+  return searchCleared && decisionsCleared;
+}
+
+export function getStorageSummary() {
+  const lastSearch = loadLastSearch();
+  const decisions = loadDecisions();
+  return {
+    hasLastSearch: Boolean(lastSearch?.form),
+    lastSearchUpdatedAt: lastSearch?.updatedAt ?? "",
+    decisionCount: Object.keys(decisions).length
   };
 }

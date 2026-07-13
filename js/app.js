@@ -1,13 +1,20 @@
-import { buildPubMedQuery, validateSearchForm } from "./query-builder.js?v=4.0.0";
-import { clearLastSearch, loadLastSearch, saveLastSearch } from "./storage.js?v=4.0.0";
+import { buildPubMedQuery, validateSearchForm } from "./query-builder.js?v=0.1.0";
+import {
+  clearAllDecisions,
+  clearAllStoredData,
+  clearLastSearch,
+  getStorageSummary,
+  loadLastSearch,
+  saveLastSearch
+} from "./storage.js?v=0.1.0";
 import {
   applyArticleStatusFilter,
   renderArticles,
   renderClassificationOverview,
   renderEmptyResults,
   summarizeScreening
-} from "./article-renderer.js?v=4.0.0";
-import { PubMedApiError, searchPubMed } from "./pubmed-api.js?v=4.0.0";
+} from "./article-renderer.js?v=0.1.0";
+import { PubMedApiError, searchPubMed } from "./pubmed-api.js?v=0.1.0";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -38,6 +45,9 @@ const elements = {
   statusFilterButtons: [...document.querySelectorAll("[data-status-filter]")],
   screeningFilterSummary: document.querySelector("#screening-filter-summary"),
   articleGroups: document.querySelector("#article-groups"),
+  storageSummary: document.querySelector("#storage-summary"),
+  clearDecisionsButton: document.querySelector("#clear-decisions-button"),
+  clearAllDataButton: document.querySelector("#clear-all-data-button"),
   globalMessage: document.querySelector("#global-message")
 };
 
@@ -81,6 +91,32 @@ function showMessage(text, type = "info") {
 function clearMessage() {
   elements.globalMessage.hidden = true;
   elements.globalMessage.textContent = "";
+}
+
+function formatStoredDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
+}
+
+function updateStorageSummary() {
+  const summary = getStorageSummary();
+  const searchText = summary.hasLastSearch
+    ? `検索条件・検索式あり${summary.lastSearchUpdatedAt ? `（最終更新：${formatStoredDate(summary.lastSearchUpdatedAt)}）` : ""}`
+    : "検索条件・検索式なし";
+  elements.storageSummary.innerHTML = `
+    <div><span>前回の検索</span><strong>${escapeHtml(searchText)}</strong></div>
+    <div><span>保存済みの論文判定</span><strong>${summary.decisionCount.toLocaleString("ja-JP")}件</strong></div>
+  `;
+  elements.clearDecisionsButton.disabled = summary.decisionCount === 0;
+  elements.clearAllDataButton.disabled = !summary.hasLastSearch && summary.decisionCount === 0;
 }
 
 function showErrors(errors) {
@@ -136,6 +172,7 @@ function saveCurrentState() {
     editedQuery: elements.queryTextarea.value,
     isManuallyEdited
   });
+  updateStorageSummary();
 }
 
 function updateManualEditState() {
@@ -278,8 +315,43 @@ function setStatusFilter(statusFilter) {
   updateScreeningControls();
 }
 
+function renderCurrentArticles() {
+  if (currentArticles.length === 0) return;
+  renderArticles(elements.articleGroups, currentArticles, {
+    onDecisionChange: () => {
+      updateScreeningControls();
+      updateStorageSummary();
+    }
+  });
+  updateScreeningControls();
+}
+
+function resetSearchInterface() {
+  elements.form.reset();
+  elements.endYear.value = CURRENT_YEAR;
+  elements.resultLimit.value = "20";
+  elements.sortOrder.value = "relevance";
+  generatedQuery = "";
+  currentConversion = null;
+  isManuallyEdited = false;
+  elements.queryTextarea.value = "";
+  elements.querySection.hidden = true;
+  elements.resultsSection.hidden = true;
+  elements.classificationOverview.replaceChildren();
+  elements.classificationOverview.hidden = true;
+  resetScreeningControls();
+  elements.articleGroups.replaceChildren();
+  elements.manualEditBadge.hidden = true;
+  showErrors({});
+}
+
 async function executePubMedSearch() {
   if (isSearching) return;
+
+  if (!navigator.onLine) {
+    showMessage("インターネットに接続されていません。接続を確認してから、もう一度検索してください。", "error");
+    return;
+  }
 
   const query = elements.queryTextarea.value.trim();
   if (!query) {
@@ -316,10 +388,7 @@ async function executePubMedSearch() {
       currentArticles = result.articles;
       activeStatusFilter = "all";
       renderClassificationOverview(elements.classificationOverview, currentArticles);
-      renderArticles(elements.articleGroups, currentArticles, {
-        onDecisionChange: updateScreeningControls
-      });
-      updateScreeningControls();
+      renderCurrentArticles();
     }
   } catch (error) {
     console.error("PubMed search failed:", error);
@@ -366,24 +435,42 @@ elements.statusFilterButtons.forEach(button => {
 });
 
 elements.clearButton.addEventListener("click", () => {
-  elements.form.reset();
-  elements.endYear.value = CURRENT_YEAR;
-  elements.resultLimit.value = "20";
-  elements.sortOrder.value = "relevance";
-  generatedQuery = "";
-  currentConversion = null;
-  isManuallyEdited = false;
-  elements.queryTextarea.value = "";
-  elements.querySection.hidden = true;
-  elements.resultsSection.hidden = true;
-  elements.classificationOverview.replaceChildren();
-  elements.classificationOverview.hidden = true;
-  resetScreeningControls();
-  elements.articleGroups.replaceChildren();
-  elements.manualEditBadge.hidden = true;
-  showErrors({});
+  resetSearchInterface();
   clearLastSearch();
+  updateStorageSummary();
   showMessage("検索条件と検索式をクリアしました。論文ごとの判定は残っています。");
+  elements.subjectInput.focus();
+});
+
+elements.clearDecisionsButton.addEventListener("click", () => {
+  const summary = getStorageSummary();
+  if (summary.decisionCount === 0) return;
+
+  const confirmed = window.confirm(`保存されている論文判定 ${summary.decisionCount}件をすべて削除します。元に戻せません。削除しますか？`);
+  if (!confirmed) return;
+
+  if (!clearAllDecisions()) {
+    showMessage("論文判定を削除できませんでした。ブラウザの設定を確認してください。", "error");
+    return;
+  }
+
+  renderCurrentArticles();
+  updateStorageSummary();
+  showMessage("保存されていた論文判定をすべて削除しました。検索条件と検索式は残っています。");
+});
+
+elements.clearAllDataButton.addEventListener("click", () => {
+  const confirmed = window.confirm("検索条件、手動修正後の検索式、すべての論文判定を削除します。元に戻せません。削除しますか？");
+  if (!confirmed) return;
+
+  if (!clearAllStoredData()) {
+    showMessage("保存データを削除できませんでした。ブラウザの設定を確認してください。", "error");
+    return;
+  }
+
+  resetSearchInterface();
+  updateStorageSummary();
+  showMessage("このブラウザに保存されていたアプリのデータをすべて削除しました。");
   elements.subjectInput.focus();
 });
 
@@ -392,4 +479,14 @@ elements.clearButton.addEventListener("click", () => {
 elements.form.addEventListener("change", () => saveCurrentState());
 elements.subjectInput.addEventListener("input", () => saveCurrentState());
 
+window.addEventListener("offline", () => {
+  showMessage("インターネット接続が切断されました。保存済みの判定は引き続き利用できますが、PubMed検索は実行できません。", "error");
+});
+window.addEventListener("online", () => {
+  showMessage("インターネット接続が復旧しました。");
+});
+window.addEventListener("storage", updateStorageSummary);
+
+updateStorageSummary();
 restoreState();
+updateStorageSummary();
