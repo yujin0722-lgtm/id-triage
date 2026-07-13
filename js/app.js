@@ -1,7 +1,7 @@
-import { buildPubMedQuery, validateSearchForm } from "./query-builder.js?v=2.0.0";
-import { clearLastSearch, loadLastSearch, saveLastSearch } from "./storage.js?v=2.0.0";
-import { renderArticles, renderEmptyResults } from "./article-renderer.js?v=2.0.0";
-import { PubMedApiError, searchPubMed } from "./pubmed-api.js?v=2.0.0";
+import { buildPubMedQuery, validateSearchForm } from "./query-builder.js?v=3.0.0";
+import { clearLastSearch, loadLastSearch, saveLastSearch } from "./storage.js?v=3.0.0";
+import { renderArticles, renderClassificationOverview, renderEmptyResults } from "./article-renderer.js?v=3.0.0";
+import { PubMedApiError, searchPubMed } from "./pubmed-api.js?v=3.0.0";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -26,6 +26,7 @@ const elements = {
   clearButton: document.querySelector("#clear-button"),
   resultsSection: document.querySelector("#results-section"),
   resultSummary: document.querySelector("#result-summary"),
+  classificationOverview: document.querySelector("#classification-overview"),
   articleGroups: document.querySelector("#article-groups"),
   globalMessage: document.querySelector("#global-message")
 };
@@ -224,6 +225,8 @@ async function executePubMedSearch() {
   setSearchingState(true);
   elements.resultsSection.hidden = false;
   elements.resultSummary.textContent = "PubMedを検索しています……";
+  elements.classificationOverview.replaceChildren();
+  elements.classificationOverview.hidden = true;
   elements.articleGroups.replaceChildren();
   elements.resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -238,13 +241,17 @@ async function executePubMedSearch() {
     elements.resultSummary.textContent = `該当件数：${result.total.toLocaleString("ja-JP")}件 ／ 今回の表示：${result.articles.length}件 ／ 並び順：${sortLabel(formValues.sortOrder)}`;
 
     if (result.articles.length === 0) {
+      elements.classificationOverview.hidden = true;
       renderEmptyResults(elements.articleGroups);
     } else {
+      renderClassificationOverview(elements.classificationOverview, result.articles);
       renderArticles(elements.articleGroups, result.articles);
     }
   } catch (error) {
     console.error("PubMed search failed:", error);
     elements.resultsSection.hidden = true;
+    elements.classificationOverview.replaceChildren();
+    elements.classificationOverview.hidden = true;
     elements.articleGroups.replaceChildren();
     showMessage(errorMessageFor(error), "error");
   } finally {
@@ -290,6 +297,8 @@ elements.clearButton.addEventListener("click", () => {
   elements.queryTextarea.value = "";
   elements.querySection.hidden = true;
   elements.resultsSection.hidden = true;
+  elements.classificationOverview.replaceChildren();
+  elements.classificationOverview.hidden = true;
   elements.articleGroups.replaceChildren();
   elements.manualEditBadge.hidden = true;
   showErrors({});

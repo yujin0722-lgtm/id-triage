@@ -6,7 +6,7 @@
   <meta name="description" content="感染症領域のPubMed検索式作成と論文選別を支援するウェブアプリ">
   <title>感染症論文トリアージ</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/style.css?v=2.0.0">
+  <link rel="stylesheet" href="css/style.css?v=3.0.0">
 </head>
 <body>
   <a class="skip-link" href="#main-content">本文へ移動</a>
@@ -18,7 +18,7 @@
         <h1>感染症論文トリアージ</h1>
         <p class="header-description">疾患名と臨床テーマからPubMed検索式を作り、論文の選別を支援します。</p>
       </div>
-      <span class="version-badge">Phase 2</span>
+      <span class="version-badge">Phase 3</span>
     </div>
   </header>
 
@@ -158,7 +158,12 @@
         </div>
       </div>
 
+      <div class="classification-notice">
+        <strong>分類について：</strong>
+        PubMedから取得したPublication Typeだけを使い、優先順位に従って1つのカテゴリーへ整理します。タイトルや抄録からの推測、論文の質の評価は行いません。
+      </div>
       <div id="result-summary" class="result-summary" role="status" aria-live="polite"></div>
+      <div id="classification-overview" class="classification-overview" hidden></div>
       <div id="article-groups"></div>
     </section>
   </main>
@@ -174,6 +179,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=2.0.0"></script>
+  <script type="module" src="js/app.js?v=3.0.0"></script>
 </body>
 </html>

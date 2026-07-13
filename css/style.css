@@ -285,3 +285,91 @@ textarea {
 }
 .empty-results p { margin: 4px 0; }
 .empty-results-title { font-weight: 800; }
+
+/* Phase 3: Publication Typeに基づく研究デザイン分類 */
+.classification-notice {
+  margin-bottom: 16px;
+  padding: 13px 15px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: .92rem;
+}
+
+.classification-overview {
+  margin: 0 0 22px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: #fff;
+}
+.classification-overview h3 { margin: 0 0 12px; font-size: 1rem; }
+.classification-overview-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 9px;
+}
+.classification-overview-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  font-size: .83rem;
+}
+.classification-overview-item strong { font-size: 1.08rem; color: var(--primary-dark); }
+
+.design-labels { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.design-detail-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 3px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text-muted);
+  font-size: .76rem;
+  font-weight: 750;
+}
+
+.classification-details {
+  margin: 13px 0 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fafcfc;
+}
+.classification-details > summary {
+  padding: 9px 12px;
+  cursor: pointer;
+  color: var(--primary-dark);
+  font-size: .88rem;
+  font-weight: 750;
+}
+.classification-details-content {
+  padding: 0 12px 12px;
+  border-top: 1px solid var(--border);
+}
+.classification-basis { margin: 11px 0; font-size: .9rem; }
+.classification-list { display: grid; gap: 8px; margin: 0; }
+.classification-row {
+  display: grid;
+  grid-template-columns: minmax(165px, 215px) 1fr;
+  gap: 10px;
+  font-size: .87rem;
+}
+.classification-row dt { font-weight: 750; }
+.classification-row dd { margin: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 900px) {
+  .classification-overview-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .classification-overview-list { grid-template-columns: 1fr; }
+  .classification-row { grid-template-columns: 1fr; gap: 2px; }
+}
