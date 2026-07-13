@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="感染症領域のPubMed検索式作成と論文選別を支援するウェブアプリ">
+  <title>感染症論文トリアージ</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">本文へ移動</a>
+
+  <header class="site-header">
+    <div class="page-width header-inner">
+      <div>
+        <p class="eyebrow">ID Paper Triage</p>
+        <h1>感染症論文トリアージ</h1>
+        <p class="header-description">疾患名と臨床テーマからPubMed検索式を作り、論文の選別を支援します。</p>
+      </div>
+      <span class="version-badge">Phase 1</span>
+    </div>
+  </header>
+
+  <main id="main-content" class="page-width">
+    <div id="global-message" class="message" role="status" aria-live="polite" hidden></div>
+
+    <section class="notice-panel" aria-labelledby="privacy-heading">
+      <h2 id="privacy-heading">入力時の注意</h2>
+      <p>患者氏名、患者ID、生年月日、診療録、個人を識別できる情報、未公表の症例情報は入力しないでください。</p>
+    </section>
+
+    <section id="search-input-section" class="panel" aria-labelledby="search-heading">
+      <div class="section-heading">
+        <div>
+          <p class="step-label">STEP 1</p>
+          <h2 id="search-heading">検索条件を入力</h2>
+        </div>
+        <p class="section-note"><span aria-hidden="true">*</span> は必須項目です</p>
+      </div>
+
+      <form id="search-form" novalidate>
+        <div class="form-group">
+          <label for="subject-input">病原体・疾患・病態 <span class="required" aria-label="必須">*</span></label>
+          <input
+            id="subject-input"
+            name="subjectInput"
+            type="text"
+            autocomplete="off"
+            placeholder="例：Staphylococcus aureus bacteremia"
+            aria-describedby="subject-help subject-error"
+            required
+          >
+          <p id="subject-help" class="help-text">英語の一般的な疾患名・病原体名・病態名を入力してください。PubMedの検索構文を直接書く欄ではありません。</p>
+          <p id="subject-error" class="field-error" role="alert" hidden></p>
+        </div>
+
+        <div class="form-group">
+          <label for="clinical-theme">臨床テーマ</label>
+          <select id="clinical-theme" name="clinicalTheme">
+            <option value="none">指定なし</option>
+            <option value="treatment">治療全般</option>
+            <option value="treatment-duration">治療期間</option>
+            <option value="oral-switch">経口薬への切り替え</option>
+            <option value="source-control">ソースコントロール</option>
+            <option value="culture-clearance">血液培養陰性化</option>
+            <option value="diagnosis">診断</option>
+            <option value="rapid-diagnosis">迅速診断</option>
+            <option value="prognosis">予後</option>
+            <option value="recurrence">再発</option>
+            <option value="antimicrobial-resistance">薬剤耐性</option>
+            <option value="prevention">予防</option>
+          </select>
+        </div>
+
+        <fieldset class="form-group">
+          <legend>研究デザイン</legend>
+          <p class="help-text">複数選択できます。何も選ばなければ、研究デザインによる絞り込みを行いません。</p>
+          <div class="checkbox-grid">
+            <label class="check-option"><input type="checkbox" name="studyDesigns" value="guideline"> <span>ガイドライン</span></label>
+            <label class="check-option"><input type="checkbox" name="studyDesigns" value="systematic-review"> <span>システマティックレビュー</span></label>
+            <label class="check-option"><input type="checkbox" name="studyDesigns" value="meta-analysis"> <span>メタ解析</span></label>
+            <label class="check-option"><input type="checkbox" name="studyDesigns" value="randomized-trial"> <span>ランダム化比較試験</span></label>
+            <label class="check-option"><input type="checkbox" name="studyDesigns" value="observational-study"> <span>観察研究</span></label>
+            <label class="check-option"><input type="checkbox" name="studyDesigns" value="case-report"> <span>症例報告</span></label>
+          </div>
+        </fieldset>
+
+        <div class="form-row two-columns">
+          <div class="form-group">
+            <label for="start-year">開始年</label>
+            <input id="start-year" name="startYear" type="number" inputmode="numeric" min="1800" max="2100" placeholder="例：2020" aria-describedby="year-error">
+          </div>
+          <div class="form-group">
+            <label for="end-year">終了年</label>
+            <input id="end-year" name="endYear" type="number" inputmode="numeric" min="1800" max="2100" aria-describedby="year-error">
+          </div>
+        </div>
+        <p id="year-error" class="field-error" role="alert" hidden></p>
+
+        <div class="form-row two-columns">
+          <div class="form-group">
+            <label for="result-limit">表示件数</label>
+            <select id="result-limit" name="resultLimit">
+              <option value="10">10件</option>
+              <option value="20" selected>20件</option>
+              <option value="50">50件</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="sort-order">並び順</label>
+            <select id="sort-order" name="sortOrder">
+              <option value="relevance">関連度順</option>
+              <option value="pub_date">新しい順</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button type="submit" class="button button-primary">検索式を作成</button>
+          <button type="button" id="clear-button" class="button button-secondary">検索条件をクリア</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="query-section" class="panel" aria-labelledby="query-heading" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="step-label">STEP 2</p>
+          <h2 id="query-heading">変換内容と検索式を確認</h2>
+        </div>
+      </div>
+
+      <div id="conversion-summary" class="conversion-summary"></div>
+
+      <div class="form-group query-editor">
+        <div class="label-row">
+          <label for="query-textarea">PubMed検索式</label>
+          <span id="manual-edit-badge" class="edit-badge" hidden>手動修正あり</span>
+        </div>
+        <textarea id="query-textarea" rows="15" spellcheck="false" aria-describedby="query-help"></textarea>
+        <p id="query-help" class="help-text">必要に応じて直接修正できます。「検索式を作成」を押し直すと、入力条件から再作成されます。</p>
+      </div>
+
+      <div class="button-row">
+        <button type="button" id="mock-search-button" class="button button-primary">PubMedを検索</button>
+        <button type="button" id="copy-query-button" class="button button-secondary">検索式をコピー</button>
+        <button type="button" id="back-to-input-button" class="button button-text">入力内容に戻る</button>
+      </div>
+      <p class="phase-note">現在はPhase 1です。「PubMedを検索」を押すと、API通信の代わりに画面確認用の仮データを表示します。</p>
+    </section>
+
+    <section id="results-section" class="panel" aria-labelledby="results-heading" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="step-label">STEP 3</p>
+          <h2 id="results-heading">研究デザイン別の検索結果</h2>
+        </div>
+      </div>
+
+      <div id="result-summary" class="result-summary" role="status" aria-live="polite"></div>
+      <div id="article-groups"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="page-width footer-inner">
+      <h2>情報源・免責事項</h2>
+      <p>本アプリはPubMedの検索を補助する非公式ツールです。検索結果および書誌情報は、将来のPhaseでNCBI E-utilitiesを通じて取得します。</p>
+      <p>研究デザインの分類は便宜的なものであり、論文の質、エビデンスの確実性、推奨の強さを評価するものではありません。</p>
+      <p>本アプリは診断、治療その他の臨床判断を提供するものではありません。重要な判断では、必ず原論文および公式情報を確認してください。</p>
+      <p>検索条件と論文の判定は、このブラウザのlocalStorageに保存されます。ブラウザのデータを削除すると保存内容も消えます。</p>
+      <p><a href="https://www.ncbi.nlm.nih.gov/home/about/policies/" target="_blank" rel="noopener noreferrer">NCBIのポリシーを確認する</a></p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
