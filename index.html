@@ -6,7 +6,7 @@
   <meta name="description" content="感染症領域のPubMed検索式作成と論文選別を支援するウェブアプリ">
   <title>感染症論文トリアージ</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/style.css?v=3.0.0">
+  <link rel="stylesheet" href="css/style.css?v=4.0.0">
 </head>
 <body>
   <a class="skip-link" href="#main-content">本文へ移動</a>
@@ -18,7 +18,7 @@
         <h1>感染症論文トリアージ</h1>
         <p class="header-description">疾患名と臨床テーマからPubMed検索式を作り、論文の選別を支援します。</p>
       </div>
-      <span class="version-badge">Phase 3</span>
+      <span class="version-badge">Phase 4</span>
     </div>
   </header>
 
@@ -164,6 +164,36 @@
       </div>
       <div id="result-summary" class="result-summary" role="status" aria-live="polite"></div>
       <div id="classification-overview" class="classification-overview" hidden></div>
+
+      <section id="screening-controls" class="screening-controls" aria-labelledby="screening-heading" hidden>
+        <div class="screening-controls-heading">
+          <div>
+            <h3 id="screening-heading">スクリーニング状況</h3>
+            <p class="help-text">判定はPMIDごとにこのブラウザへ保存され、別の検索で同じ論文が表示された場合にも復元されます。</p>
+          </div>
+          <p id="screening-filter-summary" class="screening-filter-summary" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="screening-summary-list" aria-label="現在の検索結果における判定件数">
+          <div class="screening-summary-item"><span>全体</span><strong data-screening-count="total">0件</strong></div>
+          <div class="screening-summary-item"><span>未判定</span><strong data-screening-count="unreviewed">0件</strong></div>
+          <div class="screening-summary-item"><span>読む</span><strong data-screening-count="read">0件</strong></div>
+          <div class="screening-summary-item"><span>保留</span><strong data-screening-count="hold">0件</strong></div>
+          <div class="screening-summary-item"><span>除外</span><strong data-screening-count="exclude">0件</strong></div>
+        </div>
+
+        <div class="screening-filter-row">
+          <span class="screening-filter-label">表示する判定</span>
+          <div id="status-filter-buttons" class="status-filter-buttons" role="group" aria-label="論文を判定状態で絞り込む">
+            <button type="button" class="filter-button is-active" data-status-filter="all" aria-pressed="true">すべて</button>
+            <button type="button" class="filter-button" data-status-filter="unreviewed" aria-pressed="false">未判定</button>
+            <button type="button" class="filter-button" data-status-filter="read" aria-pressed="false">読む</button>
+            <button type="button" class="filter-button" data-status-filter="hold" aria-pressed="false">保留</button>
+            <button type="button" class="filter-button" data-status-filter="exclude" aria-pressed="false">除外</button>
+          </div>
+        </div>
+      </section>
+
       <div id="article-groups"></div>
     </section>
   </main>
@@ -179,6 +209,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=3.0.0"></script>
+  <script type="module" src="js/app.js?v=4.0.0"></script>
 </body>
 </html>

@@ -373,3 +373,251 @@ textarea {
   .classification-overview-list { grid-template-columns: 1fr; }
   .classification-row { grid-template-columns: 1fr; gap: 2px; }
 }
+
+/* Phase 3.1: 論文カード表示の調整 */
+.article-list {
+  gap: 10px;
+  padding: 12px;
+}
+
+.article-card {
+  padding: 15px;
+}
+
+.article-card-header {
+  margin-bottom: 5px;
+}
+
+.article-title {
+  margin: 6px 0 7px;
+  line-height: 1.4;
+}
+
+.article-meta {
+  margin: 2px 0;
+  line-height: 1.5;
+}
+
+.article-identifiers {
+  gap: 14px;
+  margin: 8px 0 9px;
+}
+
+.article-identifier {
+  white-space: nowrap;
+}
+
+.identifier-link {
+  color: var(--primary-dark);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.identifier-link:hover {
+  color: var(--primary);
+}
+
+.identifier-link::after {
+  content: none;
+}
+
+.classification-details {
+  margin-top: 9px;
+}
+
+.classification-details > summary {
+  padding: 8px 11px;
+}
+
+.classification-details-content {
+  padding: 0 11px 10px;
+}
+
+.classification-basis {
+  margin: 9px 0;
+}
+
+.classification-list {
+  gap: 6px;
+}
+
+.classification-details-content .help-text {
+  margin: 9px 0 0;
+}
+
+.article-actions,
+.screening-actions {
+  margin-top: 10px;
+}
+
+.screening-panel {
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+@media (max-width: 720px) {
+  .article-list {
+    padding: 10px;
+  }
+
+  .article-card {
+    padding: 13px;
+  }
+
+  .article-identifier {
+    white-space: normal;
+  }
+}
+
+/* Phase 4: スクリーニング集計・判定フィルター */
+.screening-controls {
+  margin: 0 0 22px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: #fff;
+}
+
+.screening-controls-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.screening-controls-heading h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.screening-controls-heading .help-text {
+  margin: 0;
+}
+
+.screening-filter-summary {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-size: .85rem;
+  font-weight: 800;
+}
+
+.screening-summary-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.screening-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  font-size: .83rem;
+}
+
+.screening-summary-item strong {
+  color: var(--primary-dark);
+  font-size: 1.08rem;
+}
+
+.screening-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.screening-filter-label {
+  flex: 0 0 auto;
+  font-size: .9rem;
+  font-weight: 750;
+}
+
+.status-filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.filter-button {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.filter-button:hover {
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.filter-button.is-active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+
+.exclusion-field {
+  display: grid;
+  gap: 5px;
+}
+
+.exclusion-field label {
+  font-size: .86rem;
+  font-weight: 750;
+}
+
+.exclusion-note-field textarea {
+  min-height: 88px;
+}
+
+.filter-empty-results {
+  margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .screening-summary-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .screening-controls-heading,
+  .screening-filter-row {
+    display: block;
+  }
+
+  .screening-filter-summary {
+    width: fit-content;
+    margin-top: 10px;
+  }
+
+  .screening-summary-list {
+    grid-template-columns: 1fr;
+  }
+
+  .status-filter-buttons {
+    margin-top: 8px;
+  }
+
+  .filter-button {
+    flex: 1 1 calc(50% - 7px);
+  }
+}

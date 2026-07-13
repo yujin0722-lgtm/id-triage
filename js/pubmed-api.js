@@ -149,6 +149,24 @@ function extractDoi(record) {
   return locationMatch?.[1]?.replace(/[.,;]+$/, "") ?? "";
 }
 
+function extractPages(record) {
+  const pages = cleanText(record?.pages);
+  if (pages) return pages;
+
+  let electronicLocation = cleanText(record?.elocationid);
+  if (!electronicLocation) return "";
+
+  // ESummaryのelocationidには「pii: ... doi: ...」が同居することがあります。
+  // DOIは専用欄に表示するため、引用情報からは取り除きます。
+  electronicLocation = electronicLocation
+    .replace(/\s*(?:[.;]\s*)?doi:\s*10\.\d{4,9}\/\S+/i, "")
+    .replace(/^pii:\s*/i, "")
+    .replace(/[.,;]+$/, "")
+    .trim();
+
+  return /^doi:/i.test(electronicLocation) ? "" : electronicLocation;
+}
+
 export function parseESearchResponse(data) {
   const result = data?.esearchresult;
   if (!result || !Array.isArray(result.idlist)) {
@@ -189,12 +207,7 @@ export function parseESummaryResponse(data, requestedIds = []) {
       publicationDate: cleanText(record.pubdate || record.epubdate),
       volume: cleanText(record.volume),
       issue: cleanText(record.issue),
-      pages: (() => {
-        const pages = cleanText(record.pages);
-        if (pages) return pages;
-        const electronicLocation = cleanText(record.elocationid);
-        return /^doi:/i.test(electronicLocation) ? "" : electronicLocation;
-      })(),
+      pages: extractPages(record),
       doi: extractDoi(record),
       publicationTypes: asArray(record.pubtype).map(cleanText).filter(Boolean),
       pubmedUrl: `https://pubmed.ncbi.nlm.nih.gov/${encodeURIComponent(pmid)}/`
